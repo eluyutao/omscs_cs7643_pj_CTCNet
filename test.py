@@ -15,7 +15,6 @@ if __name__ == '__main__':
     opt.batch_size = 1    # test code only supports batch_size = 1
     opt.serial_batches = True  # disable data shuffling; comment this line if results on randomly chosen images are needed.
     opt.no_flip = True
-    
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     model = create_model(opt)      # create a model given opt.model and other options
     if len(opt.pretrain_model_path):
@@ -43,16 +42,24 @@ if __name__ == '__main__':
         print(inp.shape)
 #        inp = F.interpolate(inp, size=[16, 16], mode="bicubic")
 
-       # print(inp.shape)
+        # print(inp.shape)
+        elapsed_time = 0
         with torch.no_grad():
             start_time = time.time()
             output_SR = network(inp)
             elapsed_time += time.time() - start_time
            # print(output_SR.shape)
-        img_path = data['LR_paths']     # get image paths
+           
         output_sr_img = utils.tensor_to_img(output_SR, normal=True)
 
-        save_path = os.path.join(save_dir, img_path[0].split('/')[-1]) 
+        # Get image path and construct save path
+        img_path = data['LR_paths']  # Assumes 'LR_paths' is a list of strings
+        save_path = os.path.join(save_dir, os.path.basename(img_path[0]))
+
+        # Ensure save directory exists
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+        # Save the SR image
         save_img = Image.fromarray(output_sr_img)
         save_img.save(save_path)
     print(elapsed_time/1000)
